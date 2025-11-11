@@ -2,8 +2,7 @@ import {
     createRootRoute,
     Outlet,
 } from "@tanstack/react-router";
-import Navbar from "../components/navbar";
-import { SidebarProvider } from "../components/ui/sidebar";
+import Navbar from "../components/navbar"
 import { AuthProvider, useAuth } from "../contexts/auth-context";
 import { Mail, Facebook, Twitter, Linkedin, Instagram, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
@@ -17,19 +16,17 @@ export const Route = createRootRoute({
 
 function Root() {
     return (
-        <AuthProvider>
-            <SidebarProvider>
-                <main className="w-full min-h-screen flex justify-between flex-col">
-                    <div>
-                        <Navbar />
-                        <Outlet />
-                    </div>
-                    <Footer />
-                </main>
-                <FloatingMessagesButton />
-            </SidebarProvider>
-        </AuthProvider>
-    );
+      <AuthProvider>
+        <main className="w-full min-h-screen flex justify-between flex-col">
+          <div>
+            <Navbar />
+            <Outlet />
+          </div>
+          <Footer />
+        </main>
+        <FloatingMessagesButton />
+      </AuthProvider>
+    )
 }
 
 function FloatingMessagesButton() {

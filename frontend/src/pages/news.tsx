@@ -11,23 +11,51 @@ export const Route = createFileRoute('/news')({
   component: News,
 });
 
-const reactions = [
-  { id: 'like', icon: ThumbsUp, label: 'Gostei', color: 'text-blue-600' },
-  { id: 'love', icon: Heart, label: 'Amei', color: 'text-red-600' },
-  { id: 'celebrate', icon: Award, label: 'Parabéns', color: 'text-green-600' },
-  { id: 'insightful', icon: Lightbulb, label: 'Interessante', color: 'text-yellow-600' },
-  { id: 'funny', icon: Smile, label: 'Engraçado', color: 'text-purple-600' },
-];
+interface Comment {
+  id: number
+  author: string
+  text: string
+  date: string
+}
 
-const initialPosts = [
+interface Post {
+  id: number
+  author: string
+  authorAvatar: string
+  title: string
+  date: string
+  category: string
+  content: string
+  likes: number
+  comments: number
+  shares: number
+  reactions: Record<string, number>
+  commentsList: Comment[]
+}
+
+const reactions = [
+  { id: "like", icon: ThumbsUp, label: "Gostei", color: "text-blue-600" },
+  { id: "love", icon: Heart, label: "Amei", color: "text-red-600" },
+  { id: "celebrate", icon: Award, label: "Parabéns", color: "text-green-600" },
+  {
+    id: "insightful",
+    icon: Lightbulb,
+    label: "Interessante",
+    color: "text-yellow-600",
+  },
+  { id: "funny", icon: Smile, label: "Engraçado", color: "text-purple-600" },
+]
+
+const initialPosts: Post[] = [
   {
     id: 1,
-    author: 'Redação Alumni',
-    authorAvatar: 'RA',
-    title: 'Ex-aluno ganha prêmio internacional de inovação',
-    date: '10 Out 2025',
-    category: 'Conquistas',
-    content: 'João Silva, formado em 2015, foi reconhecido com o prestigiado prêmio de inovação tecnológica pela sua contribuição no desenvolvimento de soluções sustentáveis.',
+    author: "Redação Alumni",
+    authorAvatar: "RA",
+    title: "Ex-aluno ganha prêmio internacional de inovação",
+    date: "10 Out 2025",
+    category: "Conquistas",
+    content:
+      "João Silva, formado em 2015, foi reconhecido com o prestigiado prêmio de inovação tecnológica pela sua contribuição no desenvolvimento de soluções sustentáveis.",
     likes: 245,
     comments: 32,
     shares: 18,
@@ -36,12 +64,13 @@ const initialPosts = [
   },
   {
     id: 2,
-    author: 'Departamento de Relações',
-    authorAvatar: 'DR',
-    title: 'Nova parceria estratégica com empresa líder em tecnologia',
-    date: '5 Out 2025',
-    category: 'Parcerias',
-    content: 'A instituição estabeleceu uma parceria inovadora com uma das maiores empresas de tecnologia do país, criando novas oportunidades para ex-alunos.',
+    author: "Departamento de Relações",
+    authorAvatar: "DR",
+    title: "Nova parceria estratégica com empresa líder em tecnologia",
+    date: "5 Out 2025",
+    category: "Parcerias",
+    content:
+      "A instituição estabeleceu uma parceria inovadora com uma das maiores empresas de tecnologia do país, criando novas oportunidades para ex-alunos.",
     likes: 189,
     comments: 24,
     shares: 15,
@@ -50,19 +79,20 @@ const initialPosts = [
   },
   {
     id: 3,
-    author: 'Comissão de Eventos',
-    authorAvatar: 'CE',
-    title: 'Reunião de turma de 2000 celebra 25 anos',
-    date: '1 Out 2025',
-    category: 'Eventos',
-    content: 'A celebração dos 25 anos de formatura reuniu mais de 150 ex-alunos num evento memorável cheio de recordações e networking.',
+    author: "Comissão de Eventos",
+    authorAvatar: "CE",
+    title: "Reunião de turma de 2000 celebra 25 anos",
+    date: "1 Out 2025",
+    category: "Eventos",
+    content:
+      "A celebração dos 25 anos de formatura reuniu mais de 150 ex-alunos num evento memorável cheio de recordações e networking.",
     likes: 312,
     comments: 45,
     shares: 28,
     reactions: {},
     commentsList: [],
   },
-];
+]
 
 function News() {
   const { currentUser } = useAuth();
