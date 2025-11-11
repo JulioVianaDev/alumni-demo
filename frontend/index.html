@@ -21,6 +21,17 @@
         <title>Agenda-ai</title>
         <!-- Google OAuth Script -->
         <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <!-- GitHub Pages SPA Redirect Handler -->
+        <script>
+          // This script checks for redirected paths from 404.html
+          (function(){
+            var redirect = sessionStorage.redirect;
+            delete sessionStorage.redirect;
+            if (redirect && redirect !== location.href) {
+              history.replaceState(null, null, redirect);
+            }
+          })();
+        </script>
     </head>
     <body>
         <div id="root"></div>

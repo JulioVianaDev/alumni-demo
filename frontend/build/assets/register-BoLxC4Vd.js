@@ -1,4 +1,4 @@
-import{c as j,b as g,u as v,r as n,j as e,d as N,P as b,B as y,t as w}from"./index-DAbnm54K.js";import{I as r}from"./input-DItwqtK7.js";import{C,a as k,b as S,d as E,c as P}from"./card-BdPPvfoy.js";import{L as u,a as B,m as L,b as A}from"./mock-data-Bq6QNiT1.js";import{G as x}from"./graduation-cap-C6_EGoE9.js";import{B as D}from"./building-BILDoJI9.js";import{B as I}from"./briefcase-Dgsyntzd.js";/**
+import{c as j,b as g,u as v,r as n,j as e,d as N,P as b,B as y,t as w}from"./index-VY3BXTpr.js";import{I as r}from"./input-Bmsji4rj.js";import{C,a as k,b as S,d as E,c as P}from"./card-9EJwVhjE.js";import{L as u,a as B,m as L,b as A}from"./mock-data-Dojinl2w.js";import{G as x}from"./graduation-cap-Csi8wHEX.js";import{B as D}from"./building-DtMZhgqA.js";import{B as I}from"./briefcase-Lbg0egcM.js";/**
  * @license lucide-react v0.483.0 - ISC
  *
  * This source code is licensed under the ISC license.

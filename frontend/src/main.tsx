@@ -9,7 +9,10 @@ import {
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./index.css";
-const router = createRouter({ routeTree });
+const router = createRouter({ 
+    routeTree,
+    basepath: "/alumni-demo"
+});
 
 declare module "@tanstack/react-router" {
     interface Register {

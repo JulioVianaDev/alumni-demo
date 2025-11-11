@@ -10,31 +10,31 @@ const rootDir = resolve(__dirname, "..");
 
 export default defineConfig(() => {
     return {
-        plugins: [
-            react(),
-            commonjs(),
-            checker({
-                typescript: {},
-            }),
-            tailwindcss(),
-            tanstackRouter({
-                target: "react",
-                autoCodeSplitting: true,
-                routesDirectory: "./src/pages",
-                generatedRouteTree: "./src/route-tree.gen.ts",
-                routeFileIgnorePrefix: "-",
-                routeToken: "layout",
-            }),
-        ],
-        build: {
-            outDir: "build",
+      base: "/alumni-demo/",
+      plugins: [
+        react(),
+        commonjs(),
+        checker({
+          typescript: {},
+        }),
+        tailwindcss(),
+        tanstackRouter({
+          target: "react",
+          autoCodeSplitting: true,
+          routesDirectory: "./src/pages",
+          generatedRouteTree: "./src/route-tree.gen.ts",
+          routeFileIgnorePrefix: "-",
+          routeToken: "layout",
+        }),
+      ],
+      build: {
+        outDir: "build",
+      },
+      resolve: {
+        alias: {
+          "@": resolve(__dirname, "./src"),
+          "@global-types": resolve(rootDir, "./types/dist"),
         },
-        resolve: {
-            alias: {
-                "@": resolve(__dirname, "./src"),
-                "@global-types": resolve(rootDir, "./types/dist"),
-            },
-        },
-    
-    };
+      },
+    }
 });

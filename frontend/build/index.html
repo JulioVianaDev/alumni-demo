@@ -5,13 +5,13 @@
         <link
             rel="icon"
             type="image/png"
-            href="/light.png"
+            href="/alumni-demo/light.png"
             media="(prefers-color-scheme: light)"
         />
         <link
             rel="icon"
             type="image/png"
-            href="/mynderHead_dark.png"
+            href="/alumni-demo/mynderHead_dark.png"
             media="(prefers-color-scheme: dark)"
         />
         <meta
@@ -21,8 +21,19 @@
         <title>Agenda-ai</title>
         <!-- Google OAuth Script -->
         <script src="https://accounts.google.com/gsi/client" async defer></script>
-      <script type="module" crossorigin src="/assets/index-DAbnm54K.js"></script>
-      <link rel="stylesheet" crossorigin href="/assets/index-Dhdy1WfK.css">
+        <!-- GitHub Pages SPA Redirect Handler -->
+        <script>
+          // This script checks for redirected paths from 404.html
+          (function(){
+            var redirect = sessionStorage.redirect;
+            delete sessionStorage.redirect;
+            if (redirect && redirect !== location.href) {
+              history.replaceState(null, null, redirect);
+            }
+          })();
+        </script>
+      <script type="module" crossorigin src="/alumni-demo/assets/index-VY3BXTpr.js"></script>
+      <link rel="stylesheet" crossorigin href="/alumni-demo/assets/index-VdXueUqj.css">
     </head>
     <body>
         <div id="root"></div>
