@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import MembershipModal from '@/components/MembershipModal';
 
 export const Route = createFileRoute('/careers')({
   component: Careers,
@@ -70,6 +71,7 @@ function Careers() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
+  const [showMembershipModal, setShowMembershipModal] = useState(false);
 
   const filteredJobs = selectedFilter === 'Todas as vagas'
     ? jobListings
@@ -138,7 +140,12 @@ function Careers() {
                 <div className="text-sm text-muted-foreground">Pares formados</div>
               </div>
             </div>
-            <Button className="w-full md:w-auto">Candidatar-me ao programa</Button>
+            <Button 
+              className="w-full md:w-auto"
+              onClick={() => setShowMembershipModal(true)}
+            >
+              Candidatar-me ao programa
+            </Button>
           </CardContent>
         </Card>
 
@@ -273,6 +280,11 @@ function Careers() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Membership Modal */}
+      {showMembershipModal && (
+        <MembershipModal onClose={() => setShowMembershipModal(false)} />
       )}
     </div>
   );
