@@ -423,7 +423,7 @@ export default function Navbar() {
             {showMessagesPanel && (
                 <MessagesPanel
                     onClose={() => setShowMessagesPanel(false)}
-                    currentUser={currentUser}
+                    currentUser={currentUser ?? undefined}
                     onUnreadCountChange={setUnreadMessagesCount}
                 />
             )}
