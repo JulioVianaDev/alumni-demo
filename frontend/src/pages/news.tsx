@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Calendar, MessageCircle, ThumbsUp, Share2, Send, Heart, Award, Lightbulb, Smile } from 'lucide-react';
+import { Calendar, MessageCircle, ThumbsUp, Share2, Send, Heart, Award, Lightbulb, Smile, X } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/auth-context';
+import type { LucideIcon } from 'lucide-react';
 
 export const Route = createFileRoute('/news')({
   component: News,
@@ -33,17 +34,26 @@ interface Post {
   commentsList: Comment[]
 }
 
-const reactions = [
-  { id: "like", icon: ThumbsUp, label: "Gostei", color: "text-blue-600" },
-  { id: "love", icon: Heart, label: "Amei", color: "text-red-600" },
-  { id: "celebrate", icon: Award, label: "Parabéns", color: "text-green-600" },
+interface Reaction {
+  id: string
+  icon: LucideIcon
+  label: string
+  color: string
+  animation: string
+}
+
+const reactions: Reaction[] = [
+  { id: "like", icon: ThumbsUp, label: "Gostei", color: "text-blue-600", animation: "animate-bounce" },
+  { id: "love", icon: Heart, label: "Amei", color: "text-red-600", animation: "animate-pulse" },
+  { id: "celebrate", icon: Award, label: "Parabéns", color: "text-green-600", animation: "animate-bounce" },
   {
     id: "insightful",
     icon: Lightbulb,
     label: "Interessante",
     color: "text-yellow-600",
+    animation: "animate-pulse",
   },
-  { id: "funny", icon: Smile, label: "Engraçado", color: "text-purple-600" },
+  { id: "funny", icon: Smile, label: "Engraçado", color: "text-purple-600", animation: "animate-bounce" },
 ]
 
 const initialPosts: Post[] = [
@@ -101,8 +111,10 @@ function News() {
   const [newPostText, setNewPostText] = useState('');
   const [showReactions, setShowReactions] = useState<number | null>(null);
   const [userReactions, setUserReactions] = useState<Record<number, string>>({});
+  const [animatingReaction, setAnimatingReaction] = useState<{ postId: number; reactionId: string } | null>(null);
   const [showComments, setShowComments] = useState<Record<number, boolean>>({});
   const [commentText, setCommentText] = useState<Record<number, string>>({});
+  const [showMessageModal, setShowMessageModal] = useState<Post | null>(null);
 
   const categories = ['Todas', 'Conquistas', 'Parcerias', 'Eventos', 'Programas', 'Doações', 'Geral'];
 
@@ -155,6 +167,10 @@ function News() {
     }));
 
     setUserReactions({ ...userReactions, [postId]: reactionId });
+    
+    // Trigger animation
+    setAnimatingReaction({ postId, reactionId });
+    setTimeout(() => setAnimatingReaction(null), 1500);
     setShowReactions(null);
   };
 
@@ -186,6 +202,15 @@ function News() {
 
   const toggleComments = (postId: number) => {
     setShowComments({ ...showComments, [postId]: !showComments[postId] });
+  };
+
+  const ReactionIcon = ({ reaction, animated = false }: { reaction: Reaction; animated?: boolean }) => {
+    const Icon = reaction.icon;
+    return (
+      <Icon 
+        className={`${animated ? 'h-12 w-12' : 'h-6 w-6'} ${reaction.color} ${animated ? reaction.animation : ''}`} 
+      />
+    );
   };
 
   return (
@@ -277,44 +302,119 @@ function News() {
                       <span>{post.shares} compartilhamentos</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 relative">
+                    <div className="relative flex-1">
+                      {(() => {
+                        const userReaction = userReactions[post.id];
+                        const selectedReaction = reactions.find(r => r.id === userReaction);
+                        const ReactionButtonIcon = selectedReaction ? selectedReaction.icon : ThumbsUp;
+                        const buttonColor = selectedReaction ? selectedReaction.color : '';
+                        const buttonText = selectedReaction ? selectedReaction.label : 'Reagir';
+                        
+                        return (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`w-full flex items-center gap-2 justify-center ${buttonColor}`}
+                            onClick={() => setShowReactions(showReactions === post.id ? null : post.id)}
+                          >
+                            <ReactionButtonIcon className="h-4 w-4" />
+                            {buttonText}
+                          </Button>
+                        );
+                      })()}
+                      
+                      {/* Reactions Popup */}
+                      {showReactions === post.id && (
+                        <div
+                          className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-background rounded-lg shadow-2xl border px-3 py-3 flex gap-2 z-10"
+                          onMouseEnter={() => setShowReactions(post.id)}
+                          onMouseLeave={() => setShowReactions(null)}
+                        >
+                          {reactions.map((reaction) => (
+                            <button
+                              key={reaction.id}
+                              onClick={() => handleReaction(post.id, reaction.id)}
+                              className="flex flex-col items-center gap-1 p-2 hover:scale-110 transition-transform rounded-lg hover:bg-muted"
+                              title={reaction.label}
+                            >
+                              <ReactionIcon reaction={reaction} />
+                              <span className="text-xs font-medium">{reaction.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Animated Reaction */}
+                      {animatingReaction?.postId === post.id && (
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 pointer-events-none">
+                          <ReactionIcon 
+                            reaction={reactions.find(r => r.id === animatingReaction.reactionId)!} 
+                            animated={true}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="flex-1"
-                      onClick={() => setShowReactions(showReactions === post.id ? null : post.id)}
-                    >
-                      <ThumbsUp className="h-4 w-4 mr-2" />
-                      Reagir
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex-1"
+                      className="flex-1 flex items-center gap-2 justify-center"
                       onClick={() => toggleComments(post.id)}
                     >
-                      <MessageCircle className="h-4 w-4 mr-2" />
+                      <MessageCircle className="h-4 w-4" />
                       Comentar
                     </Button>
-                    <Button variant="ghost" size="sm" className="flex-1">
-                      <Share2 className="h-4 w-4 mr-2" />
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1 flex items-center gap-2 justify-center"
+                      onClick={() => setShowMessageModal(post)}
+                    >
+                      <Send className="h-4 w-4" />
+                      Enviar
+                    </Button>
+                    
+                    <Button variant="ghost" size="sm" className="flex-1 flex items-center gap-2 justify-center">
+                      <Share2 className="h-4 w-4" />
                       Compartilhar
                     </Button>
                   </div>
                 </div>
 
+                {/* Comments Section */}
                 {showComments[post.id] && (
                   <div className="mt-4 pt-4 border-t">
+                    <div className="space-y-4 mb-4">
+                      {post.commentsList?.map((comment) => (
+                        <div key={comment.id} className="flex gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            {comment.author.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                          </div>
+                          <div className="flex-1 bg-muted rounded-lg px-3 py-2">
+                            <div className="font-semibold text-sm">{comment.author}</div>
+                            <div className="text-sm">{comment.text}</div>
+                            <div className="text-xs text-muted-foreground mt-1">{comment.date}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                     <div className="flex gap-3">
-                      <Input
-                        value={commentText[post.id] || ''}
-                        onChange={(e) => setCommentText({ ...commentText, [post.id]: e.target.value })}
-                        placeholder="Escreva um comentário..."
-                        onKeyPress={(e) => e.key === 'Enter' && handleComment(post.id)}
-                      />
-                      <Button size="sm" onClick={() => handleComment(post.id)}>
-                        Enviar
-                      </Button>
+                      <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                        {currentUser?.name?.split(' ').map(n => n[0]).join('').substring(0, 2) || 'U'}
+                      </div>
+                      <div className="flex-1 flex gap-2">
+                        <Input
+                          value={commentText[post.id] || ''}
+                          onChange={(e) => setCommentText({ ...commentText, [post.id]: e.target.value })}
+                          placeholder="Escreva um comentário..."
+                          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleComment(post.id)}
+                        />
+                        <Button size="sm" onClick={() => handleComment(post.id)}>
+                          Enviar
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -323,6 +423,16 @@ function News() {
           ))}
         </div>
 
+        {/* Load More Button */}
+        {filteredPosts.length > 0 && (
+          <div className="mt-12 text-center">
+            <Button variant="outline" size="lg">
+              Carregar mais publicações
+            </Button>
+          </div>
+        )}
+
+        {/* No Results */}
         {filteredPosts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">
@@ -331,6 +441,43 @@ function News() {
           </div>
         )}
       </div>
+
+      {/* Message Modal */}
+      {showMessageModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg max-w-md w-full shadow-xl">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-bold">Enviar mensagem</h3>
+                <button
+                  onClick={() => setShowMessageModal(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Enviar esta publicação para: <strong>{showMessageModal.author}</strong>
+              </p>
+              <textarea
+                className="w-full border rounded-lg px-3 py-2 min-h-[100px] bg-background"
+                placeholder="Adicione uma mensagem (opcional)..."
+              />
+              <div className="flex gap-3 mt-4">
+                <Button variant="outline" className="flex-1" onClick={() => setShowMessageModal(null)}>
+                  Cancelar
+                </Button>
+                <Button className="flex-1" onClick={() => {
+                  alert('Mensagem enviada!');
+                  setShowMessageModal(null);
+                }}>
+                  Enviar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
