@@ -12,17 +12,22 @@ import {
     Menu,
     X,
     Crown,
+    MessageSquare,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import MembershipModal from "./MembershipModal";
+import MessagesPanel from "./MessagesPanel";
+import { Badge } from "./ui/badge";
 
 export default function Navbar() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showDirectorySubmenu, setShowDirectorySubmenu] = useState(false);
     const [showMembershipModal, setShowMembershipModal] = useState(false);
+    const [showMessagesPanel, setShowMessagesPanel] = useState(false);
+    const [unreadMessagesCount, setUnreadMessagesCount] = useState(3);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { theme, setTheme } = useTheme();
     const { isAuthenticated, currentUser, logout } = useAuth();
@@ -152,6 +157,24 @@ export default function Navbar() {
                     <Crown className="h-4 w-4" />
                     Seja membro
                 </Button>
+
+                {/* Messages Button - Only when authenticated */}
+                {isAuthenticated && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowMessagesPanel(true)}
+                        className="relative hover:bg-gray-100 dark:hover:bg-gray-800"
+                        title="Mensagens"
+                    >
+                        <MessageSquare className="h-5 w-5" />
+                        {unreadMessagesCount > 0 && (
+                            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-600 hover:bg-red-600">
+                                {unreadMessagesCount}
+                            </Badge>
+                        )}
+                    </Button>
+                )}
 
                 {/* Theme Toggle Button */}
                 <Button
@@ -322,6 +345,27 @@ export default function Navbar() {
                                 Seja membro
                             </Button>
 
+                            {/* Messages Button - Only when authenticated */}
+                            {isAuthenticated && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setShowMessagesPanel(true);
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2"
+                                >
+                                    <MessageSquare className="h-4 w-4" />
+                                    <span>Mensagens</span>
+                                    {unreadMessagesCount > 0 && (
+                                        <Badge className="bg-red-600 hover:bg-red-600">
+                                            {unreadMessagesCount}
+                                        </Badge>
+                                    )}
+                                </Button>
+                            )}
+
                             {/* Theme Toggle */}
                             <button
                                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -373,6 +417,15 @@ export default function Navbar() {
             {/* Membership Modal */}
             {showMembershipModal && (
                 <MembershipModal onClose={() => setShowMembershipModal(false)} />
+            )}
+
+            {/* Messages Panel */}
+            {showMessagesPanel && (
+                <MessagesPanel
+                    onClose={() => setShowMessagesPanel(false)}
+                    currentUser={currentUser}
+                    onUnreadCountChange={setUnreadMessagesCount}
+                />
             )}
         </header>
     );

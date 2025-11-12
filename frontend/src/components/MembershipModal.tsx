@@ -3,6 +3,8 @@ import { X, Check, Star, CreditCard, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import PaymentModal from './PaymentModal';
+import { toast } from 'sonner';
 
 interface MembershipModalProps {
   onClose: () => void;
@@ -21,6 +23,7 @@ interface Plan {
 
 export default function MembershipModal({ onClose }: MembershipModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -94,11 +97,7 @@ export default function MembershipModal({ onClose }: MembershipModalProps) {
 
   const handleSubscribe = (plan: Plan) => {
     setSelectedPlan(plan);
-    // Simulation of payment processing
-    setTimeout(() => {
-      alert(`Assinatura do ${plan.name} processada com sucesso!`);
-      onClose();
-    }, 500);
+    setShowPaymentModal(true);
   };
 
   return (
@@ -297,6 +296,26 @@ export default function MembershipModal({ onClose }: MembershipModalProps) {
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedPlan && (
+        <PaymentModal
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedPlan(null);
+          }}
+          amount={selectedPlan.price}
+          type="subscription"
+          planName={selectedPlan.name}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            toast.success('Assinatura confirmada!', {
+              description: `Você agora é membro ${selectedPlan.name}`,
+            });
+            setTimeout(() => onClose(), 1500);
+          }}
+        />
+      )}
     </div>
   );
 }

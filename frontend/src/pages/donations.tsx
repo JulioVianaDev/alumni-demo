@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { DollarSign, Users, Award, TrendingUp } from 'lucide-react';
+import { DollarSign, Users, Award, TrendingUp, Heart, X, CreditCard, Building2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import PaymentModal from '@/components/PaymentModal';
 
 export const Route = createFileRoute('/donations')({
   component: Donations,
@@ -63,12 +65,18 @@ const impactStats = [
 const donationLevels = [
   { name: 'Amigo', amount: 250, benefits: ['Certificado digital', 'Newsletter exclusiva'] },
   { name: 'Apoiante', amount: 500, benefits: ['Todos os benefícios anteriores', 'Convite para evento anual'] },
-  { name: 'Patrono', amount: 2500, benefits: ['Todos os benefícios anteriores', 'Reconhecimento no website'] },
-  { name: 'Benemérito', amount: 5000, benefits: ['Todos os benefícios anteriores', 'Placa comemorativa'] },
+  { name: 'Patrono', amount: 2500, benefits: ['Todos os benefícios anteriores', 'Reconhecimento no website', 'Reunião com direção'] },
+  { name: 'Benemérito', amount: 5000, benefits: ['Todos os benefícios anteriores', 'Placa comemorativa', 'Participação em comité consultivo'] },
 ];
 
 function Donations() {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [donationFrequency, setDonationFrequency] = useState<'once' | 'monthly'>('once');
+  const [paymentMethod, setPaymentMethod] = useState<'credit_card' | 'bank_transfer'>('credit_card');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [donationAmount, setDonationAmount] = useState(0);
+  const [customDonationAmount, setCustomDonationAmount] = useState(500);
+  const [selectedDestination, setSelectedDestination] = useState('Onde for mais necessário');
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
@@ -129,8 +137,11 @@ function Donations() {
                     <Users className="h-4 w-4" />
                     <span>{campaign.donors} doadores</span>
                   </div>
-                  <Button className="w-full" onClick={() => setSelectedCampaign(campaign)}>
-                    Fazer doação
+                  <Button className="w-full" onClick={() => {
+                    setDonationAmount(100);
+                    setShowPaymentModal(true);
+                  }}>
+                    Doar agora
                   </Button>
                 </CardContent>
               </Card>
@@ -139,34 +150,270 @@ function Donations() {
         </div>
 
         <div className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Níveis de doação</h2>
+          <h2 className="text-3xl font-bold mb-6 text-center">Níveis de doação</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {donationLevels.map((level) => (
-              <Card key={level.name} className="hover:shadow-xl transition-shadow">
+            {donationLevels.map((level, index) => (
+              <Card 
+                key={level.name} 
+                className={`hover:shadow-xl transition-shadow ${
+                  index === 3 ? 'border-2 border-blue-600' : ''
+                }`}
+              >
                 <CardHeader>
-                  <CardTitle className="text-xl">{level.name}</CardTitle>
-                  <div className="text-3xl font-bold text-blue-600">
-                    R$ {level.amount.toLocaleString('pt-BR')}
+                  <CardTitle className="text-2xl text-center">{level.name}</CardTitle>
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-blue-600 mb-2">
+                      R$ {level.amount}
+                    </div>
+                    <div className="text-sm text-muted-foreground">por ano</div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 mb-6">
-                    {level.benefits.map((benefit, index) => (
-                      <li key={index} className="text-sm flex items-start gap-2">
-                        <span className="text-green-600">✓</span>
+                    {level.benefits.map((benefit, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <Heart className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <span>{benefit}</span>
                       </li>
                     ))}
                   </ul>
-                  <Button className="w-full" variant="outline">
-                    Doar {level.name}
+                  <Button 
+                    className="w-full" 
+                    variant={index === 3 ? 'default' : 'outline'}
+                    onClick={() => {
+                      setDonationAmount(level.amount);
+                      setShowPaymentModal(true);
+                    }}
+                  >
+                    Doar agora
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
+
+        {/* Custom Donation Form */}
+        <Card className="max-w-2xl mx-auto mb-12">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center">Faça uma doação personalizada</CardTitle>
+            <CardDescription className="text-center text-base">
+              Escolha o valor que deseja contribuir
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Valor da doação (R$)
+                </label>
+                <Input 
+                  type="number" 
+                  placeholder="500" 
+                  className="text-lg"
+                  value={customDonationAmount}
+                  onChange={(e) => setCustomDonationAmount(Number(e.target.value))}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Destino da doação
+                </label>
+                <select 
+                  className="w-full border rounded-md px-3 py-2 bg-background"
+                  value={selectedDestination}
+                  onChange={(e) => setSelectedDestination(e.target.value)}
+                >
+                  <option>Onde for mais necessário</option>
+                  <option>Bolsas de estudo</option>
+                  <option>Infraestrutura</option>
+                  <option>Investigação</option>
+                  <option>Programas de ex-alunos</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Frequência
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button 
+                    variant={donationFrequency === 'once' ? 'default' : 'outline'}
+                    onClick={() => setDonationFrequency('once')}
+                  >
+                    Uma vez
+                  </Button>
+                  <Button 
+                    variant={donationFrequency === 'monthly' ? 'default' : 'outline'}
+                    onClick={() => setDonationFrequency('monthly')}
+                  >
+                    Mensal
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Método de pagamento
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button 
+                    variant={paymentMethod === 'credit_card' ? 'default' : 'outline'}
+                    onClick={() => setPaymentMethod('credit_card')}
+                    className="flex items-center gap-2"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Cartão de crédito
+                  </Button>
+                  <Button 
+                    variant={paymentMethod === 'bank_transfer' ? 'default' : 'outline'}
+                    onClick={() => setPaymentMethod('bank_transfer')}
+                    className="flex items-center gap-2"
+                  >
+                    <Building2 className="h-4 w-4" />
+                    Transferência bancária
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="anonymous" className="rounded" />
+                <label htmlFor="anonymous" className="text-sm">
+                  Fazer doação anónima
+                </label>
+              </div>
+
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={() => {
+                  setDonationAmount(customDonationAmount);
+                  setShowPaymentModal(true);
+                }}
+              >
+                Processar doação
+              </Button>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Todas as doações são seguras e processadas através de gateway de pagamento certificado.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recognition Section */}
+        <div className="text-center">
+          <h2 className="text-3xl font-bold mb-6">Reconhecimento aos nossos doadores</h2>
+          <Card className="max-w-4xl mx-auto">
+            <CardContent className="pt-6">
+              <p className="text-muted-foreground mb-4">
+                Agradecemos profundamente a todos os ex-alunos que contribuíram para o crescimento da nossa instituição.
+              </p>
+              <Button variant="outline">Ver lista de doadores</Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
+      {/* Donation Modal for Campaigns */}
+      {selectedCampaign && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-2xl font-bold">{selectedCampaign.title}</h3>
+                <button
+                  onClick={() => setSelectedCampaign(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <p className="text-muted-foreground mb-6">{selectedCampaign.description}</p>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Valor da doação (R$)
+                  </label>
+                  <Input type="number" placeholder="500" className="text-lg" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Frequência
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button 
+                      variant={donationFrequency === 'once' ? 'default' : 'outline'}
+                      onClick={() => setDonationFrequency('once')}
+                    >
+                      Uma vez
+                    </Button>
+                    <Button 
+                      variant={donationFrequency === 'monthly' ? 'default' : 'outline'}
+                      onClick={() => setDonationFrequency('monthly')}
+                    >
+                      Mensal
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Método de pagamento
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button 
+                      variant={paymentMethod === 'credit_card' ? 'default' : 'outline'}
+                      onClick={() => setPaymentMethod('credit_card')}
+                      className="flex items-center gap-2"
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      Cartão de crédito
+                    </Button>
+                    <Button 
+                      variant={paymentMethod === 'bank_transfer' ? 'default' : 'outline'}
+                      onClick={() => setPaymentMethod('bank_transfer')}
+                      className="flex items-center gap-2"
+                    >
+                      <Building2 className="h-4 w-4" />
+                      Transferência bancária
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button variant="outline" className="flex-1" onClick={() => setSelectedCampaign(null)}>
+                    Cancelar
+                  </Button>
+                  <Button className="flex-1" onClick={() => {
+                    setDonationAmount(100);
+                    setShowPaymentModal(true);
+                    setSelectedCampaign(null);
+                  }}>
+                    Confirmar doação
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <PaymentModal
+          onClose={() => setShowPaymentModal(false)}
+          amount={donationAmount}
+          type="donation"
+          onSuccess={() => {
+            setShowPaymentModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
