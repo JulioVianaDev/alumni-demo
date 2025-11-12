@@ -11,15 +11,18 @@ import {
     Sun,
     Menu,
     X,
+    Crown,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import MembershipModal from "./MembershipModal";
 
 export default function Navbar() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showDirectorySubmenu, setShowDirectorySubmenu] = useState(false);
+    const [showMembershipModal, setShowMembershipModal] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { theme, setTheme } = useTheme();
     const { isAuthenticated, currentUser, logout } = useAuth();
@@ -139,6 +142,17 @@ export default function Navbar() {
 
             {/* Right Side Actions */}
             <div className="hidden md:flex items-center gap-4">
+                {/* Membership Button */}
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowMembershipModal(true)}
+                    className="flex items-center gap-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
+                >
+                    <Crown className="h-4 w-4" />
+                    Seja membro
+                </Button>
+
                 {/* Theme Toggle Button */}
                 <Button
                     variant="ghost"
@@ -292,8 +306,23 @@ export default function Navbar() {
                             </div>
                         )                        )}
 
-                        {/* Theme Toggle in Mobile Menu */}
-                        <div className="pt-4 border-t">
+                        {/* Mobile Actions */}
+                        <div className="pt-4 border-t space-y-2">
+                            {/* Membership Button */}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setShowMembershipModal(true);
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className="w-full flex items-center justify-center gap-2 border-blue-600 text-blue-600"
+                            >
+                                <Crown className="h-4 w-4" />
+                                Seja membro
+                            </Button>
+
+                            {/* Theme Toggle */}
                             <button
                                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                                 className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium w-full hover:bg-muted transition-colors"
@@ -313,7 +342,7 @@ export default function Navbar() {
                         </div>
 
                         {!isAuthenticated && (
-                            <div className="pt-4 space-y-2">
+                            <div className="pt-2 space-y-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -339,6 +368,11 @@ export default function Navbar() {
                         )}
                     </nav>
                 </div>
+            )}
+
+            {/* Membership Modal */}
+            {showMembershipModal && (
+                <MembershipModal onClose={() => setShowMembershipModal(false)} />
             )}
         </header>
     );
