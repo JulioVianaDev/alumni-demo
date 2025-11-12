@@ -86,7 +86,7 @@ export default function Navbar() {
 
     return (
         <header
-            className={`flex justify-between h-20 w-full items-center px-4 md:px-6 border-b-2 ${theme === "dark" ? "border-secondary-foreground" : "border-primary"}`}
+            className={`sticky top-0 z-50 bg-background flex justify-between h-20 w-full items-center px-4 md:px-6 border-b-2 ${theme === "dark" ? "border-secondary-foreground" : "border-primary"}`}
         >
             {/* Logo */}
             <Link to="/" className="flex-shrink-0">
