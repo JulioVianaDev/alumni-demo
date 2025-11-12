@@ -1,10 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin, Users, Clock, X } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, X, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/auth-context';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/events')({
   component: Events,
@@ -65,14 +67,30 @@ const categoryColors: Record<string, string> = {
 };
 
 function Events() {
+  const { currentUser } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
+  const [registeredEvents, setRegisteredEvents] = useState<Set<number>>(new Set());
+  const [events, setEvents] = useState<Event[]>(upcomingEvents);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+  });
+
+  useEffect(() => {
+    if (currentUser?.name) {
+      setFormData({
+        name: currentUser.name,
+        email: currentUser.email || '',
+      });
+    }
+  }, [currentUser]);
 
   const filteredEvents = selectedCategory === 'Todos'
-    ? upcomingEvents
-    : upcomingEvents.filter(event => event.category === selectedCategory);
+    ? events
+    : events.filter(event => event.category === selectedCategory);
 
   const handleViewDetails = (event: Event) => {
     setSelectedEvent(event);
@@ -90,6 +108,65 @@ function Events() {
     setShowModal(false);
     setSelectedEvent(null);
     setModalType('');
+  };
+
+  const handleConfirmRegistration = () => {
+    if (!selectedEvent) return;
+
+    if (!formData.name.trim() || !formData.email.trim()) {
+      toast.error('Por favor, preencha todos os campos');
+      return;
+    }
+
+    // Add to registered events
+    setRegisteredEvents(new Set([...registeredEvents, selectedEvent.id]));
+
+    // Update event attendees count
+    setEvents(events.map(event => {
+      if (event.id === selectedEvent.id) {
+        return {
+          ...event,
+          attendees: event.attendees + 1,
+          status: event.maxAttendees && event.attendees + 1 >= event.maxAttendees ? 'full' : event.status,
+        };
+      }
+      return event;
+    }));
+
+    toast.success('Inscrição confirmada!', {
+      description: `Você está inscrito no evento "${selectedEvent.title}"`,
+      icon: <CheckCircle className="h-5 w-5 text-green-600" />,
+    });
+
+    handleCloseModal();
+  };
+
+  const handleUnregister = (event: Event) => {
+    // Remove from registered events
+    const newRegisteredEvents = new Set(registeredEvents);
+    newRegisteredEvents.delete(event.id);
+    setRegisteredEvents(newRegisteredEvents);
+
+    // Update event attendees count
+    setEvents(events.map(e => {
+      if (e.id === event.id) {
+        return {
+          ...e,
+          attendees: Math.max(0, e.attendees - 1),
+          status: 'open',
+        };
+      }
+      return e;
+    }));
+
+    toast.info('Inscrição cancelada', {
+      description: `Você não está mais inscrito no evento "${event.title}"`,
+      icon: <XCircle className="h-5 w-5 text-blue-600" />,
+    });
+  };
+
+  const isRegistered = (eventId: number) => {
+    return registeredEvents.has(eventId);
   };
 
   return (
@@ -115,6 +192,30 @@ function Events() {
           ))}
         </div>
 
+        {/* Registered Events Summary */}
+        {registeredEvents.size > 0 && (
+          <div className="mb-8 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <h2 className="text-xl font-bold text-green-900 dark:text-green-100">
+                Minhas Inscrições
+              </h2>
+            </div>
+            <p className="text-green-700 dark:text-green-300 mb-2">
+              Você está inscrito em <strong>{registeredEvents.size}</strong> {registeredEvents.size === 1 ? 'evento' : 'eventos'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {events
+                .filter(e => registeredEvents.has(e.id))
+                .map(event => (
+                  <Badge key={event.id} variant="secondary" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100">
+                    {event.title}
+                  </Badge>
+                ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {filteredEvents.map((event) => (
             <Card key={event.id} className="hover:shadow-xl transition-shadow">
@@ -123,9 +224,17 @@ function Events() {
                   <Badge className={categoryColors[event.category]}>
                     {event.category}
                   </Badge>
-                  {event.status === 'full' && (
-                    <Badge variant="destructive">Esgotado</Badge>
-                  )}
+                  <div className="flex gap-2">
+                    {isRegistered(event.id) && (
+                      <Badge variant="default" className="bg-green-600">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Inscrito
+                      </Badge>
+                    )}
+                    {event.status === 'full' && (
+                      <Badge variant="destructive">Esgotado</Badge>
+                    )}
+                  </div>
                 </div>
                 <CardTitle className="text-2xl">{event.title}</CardTitle>
               </CardHeader>
@@ -168,16 +277,33 @@ function Events() {
                 )}
 
                 <div className="flex gap-3">
-                  <Button
-                    className="flex-1"
-                    disabled={event.status === 'full'}
-                    onClick={() => handleRegister(event)}
-                  >
-                    {event.status === 'full' ? 'Esgotado' : 'Inscrever-me'}
-                  </Button>
-                  <Button variant="outline" onClick={() => handleViewDetails(event)}>
-                    Ver detalhes
-                  </Button>
+                  {isRegistered(event.id) ? (
+                    <>
+                      <Button
+                        variant="destructive"
+                        className="flex-1"
+                        onClick={() => handleUnregister(event)}
+                      >
+                        Desinscrever-me
+                      </Button>
+                      <Button variant="outline" onClick={() => handleViewDetails(event)}>
+                        Ver detalhes
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        className="flex-1"
+                        disabled={event.status === 'full'}
+                        onClick={() => handleRegister(event)}
+                      >
+                        {event.status === 'full' ? 'Esgotado' : 'Inscrever-me'}
+                      </Button>
+                      <Button variant="outline" onClick={() => handleViewDetails(event)}>
+                        Ver detalhes
+                      </Button>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -235,19 +361,42 @@ function Events() {
                   </p>
                   <div className="space-y-4 mb-6">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Nome completo</label>
-                      <Input type="text" placeholder="João Silva" />
+                      <label className="block text-sm font-medium mb-2">Nome completo *</label>
+                      <Input 
+                        type="text" 
+                        placeholder="João Silva" 
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Email</label>
-                      <Input type="email" placeholder="joao.silva@email.com" />
+                      <label className="block text-sm font-medium mb-2">Email *</label>
+                      <Input 
+                        type="email" 
+                        placeholder="joao.silva@email.com" 
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                    <div className="flex gap-3">
+                      <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                          Confirmação de inscrição
+                        </p>
+                        <p className="text-blue-700 dark:text-blue-300">
+                          Você receberá um email de confirmação com todos os detalhes do evento.
+                        </p>
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-4">
                     <Button variant="outline" className="flex-1" onClick={handleCloseModal}>
                       Cancelar
                     </Button>
-                    <Button className="flex-1" onClick={handleCloseModal}>
+                    <Button className="flex-1" onClick={handleConfirmRegistration}>
                       Confirmar inscrição
                     </Button>
                   </div>
